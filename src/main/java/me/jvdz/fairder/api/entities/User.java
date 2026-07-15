@@ -3,6 +3,7 @@ package me.jvdz.fairder.api.entities;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import me.jvdz.fairder.api.dtos.EmploymentType;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -58,7 +59,7 @@ public class User {
     private String intermediaryName;
     private String intermediaryKvKNumber;
 
-    @Enumarated(EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VerificationStatus verificationStatus = VerificationStatus.UNVERIFIED;
 
@@ -160,6 +161,14 @@ public class User {
 
     public void setKvkNumber(String kvkNumber) {
         this.kvkNumber = kvkNumber;
+    }
+
+    public VerificationStatus getVerificationStatus() {
+        return verificationStatus;
+    }
+
+    public void setVerificationStatus(VerificationStatus verificationStatus) {
+        this.verificationStatus = verificationStatus;
     }
 
     public String getTipCode() {
