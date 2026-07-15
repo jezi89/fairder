@@ -1,12 +1,20 @@
 package me.jvdz.fairder.api.entities;
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import me.jvdz.fairder.api.dtos.EmploymentType;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+/**
+ * Local user entity linked to a Keycloak identity.
+ *
+ * <p>Keycloak handles authentication and authorization. This entity stores
+ * additional application data such as the user's role, verification status
+ * and contract details.</p>
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -15,10 +23,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Keycloak Subjects are being used as the primary key for users in our system. Keycloak is the identity provider
-     * and handles authentication and authorization. The subject is a unique identifier for each user in Keycloak, and
-     * it allows us to link our local user records to the corresponding Keycloak user.
+    /*
+     * The Keycloak subject uniquely links the local user to the corresponding
+     * identity in Keycloak.
      */
 
     @Column(nullable = false)
@@ -37,16 +44,18 @@ public class User {
     @Column(nullable = false)
     private UserStatus status;
 
-    /**
-     * Contract form for freelancer (ZZP/UITZEND/PAYROLL). Nullable: Not relevant for employer and admin users in V1.
+    /*
+     * Only relevant for freelancers. This field remains empty for employers
+     * and administrators in V1.
      */
 
     @Enumerated(EnumType.STRING)
     private EmploymentType employmentType;
 
-    /**
-     * Chamber of Commerce number and VAT ID are validated live against an external source (Handelsregister/VIES) and
-     * only stored as text value — deliberately no document upload, see the GDPR consideration in the scope document.
+    /*
+     * The Chamber of Commerce number and VAT ID are stored as text.
+     * Validation is performed against external sources such as the Dutch
+     * Business Register and VIES.
      */
 
     private String kvkNumber;
@@ -63,11 +72,12 @@ public class User {
     @Column(nullable = false)
     private VerificationStatus verificationStatus = VerificationStatus.UNVERIFIED;
 
-    private String verificationComment; //TODO: Add a VerificationComment entity
+    // TODO: Consider introducing a separate VerificationComment entity.
+    private String verificationComment;
 
-    /**
-     * Public QR Reference for Tips (Could Have). Only filled for flex workers; The tipping endpoint looks up the
-     * recipient using this code so guests don't need an account or internal ID.
+    /*
+     * Unique public code used to identify a freelancer when processing a tip.
+     * Guests do not need an account or an internal user ID.
      */
 
     @Column(unique = true)
@@ -81,7 +91,7 @@ public class User {
     })
     private GeoPoint homeLocation;
 
-    private String homeAddress;
+    private String homeAddressText;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -89,9 +99,13 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    /**
+     * JPA requires a protected no-argument constructor to reconstruct entities
+     * from database records.
+     */
     protected User() {}
 
-    public User(String keycloakSubject, String email, string displayName, UserPrimaryRole primaryRole) {
+    public User(String keycloakSubject, String email, String displayName, UserPrimaryRole primaryRole) {
         this.keycloakSubject = keycloakSubject;
         this.email = email;
         this.displayName = displayName;
@@ -115,6 +129,22 @@ public class User {
         this.email = email;
     }
 
+    public String getIntermediaryKvkNumber() {
+        return intermediaryKvKNumber;
+    }
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public UserPrimaryRole getPrimaryRole() {
+        return primaryRole;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
     public EmploymentType getEmploymentType() {
         return employmentType;
     }
@@ -123,13 +153,10 @@ public class User {
         this.employmentType = employmentType;
     }
 
-    public String getHomeAddress() {
-        return homeAddress;
-    }
-
-    public void setHomeAddress(String homeAddress) {
-        this.homeAddress = homeAddress;
-    }
+    /*
+     * The user's home location is stored as geographic coordinates.
+     * Distance calculations may be added at a later stage.
+     */
 
     public GeoPoint getHomeLocation() {
         return homeLocation;
@@ -180,17 +207,15 @@ public class User {
     }
 
     /**
-     * The latlon getterssetters remain identical in signature so that services, mappers and tests do not have to
-     * change; internally, they delegate to the embedded GeoPoint. Null-safe: a User without a home address has a null
-     * embedded object, then the getters simply return null.
+     * Returns the latitude of the user's home location.
+     *
+     * @return the latitude, or {@code null} if no home location is set
      */
-
-    //TODO: Begrijpen hoe dit werkt
     public BigDecimal getHomeLatitude() {
         return homeLocation == null ? null : homeLocation.latitude();
     }
 
-    public BigDecimal setHomeLatitude(BigDecimal homeLatitude) {
+    public void setHomeLatitude(BigDecimal homeLatitude) {
         this.homeLocation = GeoPoint.of(homeLatitude, homeLocation == null ? null : homeLocation.longitude());
     }
 
@@ -198,7 +223,7 @@ public class User {
         return homeLocation == null ? null : homeLocation.longitude();
     }
 
-    public BigDecimal setHomeLongitude(BigDecimal homeLongitude) {
+    public void setHomeLongitude(BigDecimal homeLongitude) {
         this.homeLocation = GeoPoint.of(homeLocation == null ? null : homeLocation.latitude(), homeLongitude);
     }
 
