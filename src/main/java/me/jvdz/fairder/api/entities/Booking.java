@@ -47,17 +47,15 @@ public class Booking {
 
     private LocalDateTime bookedAt;
 
-    /*
-     */
+
     /*
      * Records how this booking entered the option cycle. Only DIRECT_MATCH
      * consumes one open-booking option. A null value represents DIRECT_MATCH
      * for records that existed before this column was introduced.
-     *//*
+     */
 
-    @Enumerated(EnumType.STRING)
-    private BookingOrigin origin;
-*/
+/*    @Enumerated(EnumType.STRING)
+    private BookingOrigin origin;*/
 
     protected Booking() {
         // Required by JPA to reconstruct the entity from the database.
