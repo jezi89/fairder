@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### dev tools en fe demo ###
+node_modules/
+package.json
+pnpm-lock.yaml
+/.env

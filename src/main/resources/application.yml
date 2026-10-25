@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: fairder-api
+  config:
+    import: optional:file:.env[.properties]
+
+  # Virtual threads (Java 25): a (free) own virtual thread per request. Also works with JWT validation and JPA calls.
+  # If an action blocks, the JVM parks the virtual thread and uses a platform thread (carrier thread) for other work.
+  # Useful for peaks with many pending database or HTTP calls; pool-tuning is then less urgent and the JVM can schedule virtual threads efficiently.
+  threads:
+    virtual:
+      enabled: true
+
+  # In lijn met FileDocumentService.MAX_FILE_SIZE_BYTES (10 MB): zonder deze
+  # properties truncates the Boot-default (1 MB) uploads
+  # with a generic multipart error instead of our neat 422 validation message.
+  # TODO: File size FileDocumentService verhogen
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/fairder
+          audiences: account
+      client:
+        registration:
+          keycloak:
+            client-id: fairder-demo-web
+            client-secret: ${DEV_FAIRDER_API_WEB_SECRET:}
+            authorization-grant-type: authorization_code
+            scope: openid,profile,email,roles
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:9090/realms/fairder
+
+fairder:
+  security:
+    client-id: fairder-api
+
+springdoc:
+  swagger-ui:
+    oauth:
+      client-id: fairder-dev-tools
+      client-secret: ${DEV_FAIRDER_SWAGGER_SECRET:}
+      use-pkce-with-authorization-code-grant: false
+    path: /swagger-ui.html
+    display-request-duration: true
+    persist-authorization: true
+    try-it-out-enabled: true
+    filter: true
+    doc-expansion: list
+    disable-swagger-default-url: true
